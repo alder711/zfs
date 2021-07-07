@@ -1758,7 +1758,8 @@ raidz_checksum_error(zio_t *zio, raidz_col_t *rc, abd_t *bad_data)
 	vdev_t *vd = zio->io_vd->vdev_child[rc->rc_devidx];
 
 	if (!(zio->io_flags & ZIO_FLAG_SPECULATIVE) &&
-	    zio->io_priority != ZIO_PRIORITY_REBUILD) {
+	    zio->io_priority != ZIO_PRIORITY_REBUILD_READ &&
+	    zio->io_priority != ZIO_PRIORITY_REBUILD_WRITE) {
 		zio_bad_cksum_t zbc;
 		raidz_map_t *rm = zio->io_vsd;
 
@@ -1920,8 +1921,9 @@ vdev_raidz_io_done_verified(zio_t *zio, raidz_row_t *rr)
 			zio_nowait(zio_vdev_child_io(zio, NULL, cvd,
 			    rc->rc_offset, rc->rc_abd, rc->rc_size,
 			    ZIO_TYPE_WRITE,
-			    zio->io_priority == ZIO_PRIORITY_REBUILD ?
-			    ZIO_PRIORITY_REBUILD : ZIO_PRIORITY_ASYNC_WRITE,
+			    zio->io_priority == ZIO_PRIORITY_REBUILD_WRITE ?
+			    ZIO_PRIORITY_REBUILD_WRITE :
+			    ZIO_PRIORITY_ASYNC_WRITE,
 			    ZIO_FLAG_IO_REPAIR | (unexpected_errors ?
 			    ZIO_FLAG_SELF_HEAL : 0), NULL, NULL));
 		}
@@ -2396,7 +2398,15 @@ vdev_raidz_io_done(zio_t *zio)
 			 * path is unreachable since raidz_checksum_verify()
 			 * has no checksum to verify and must succeed.
 			 */
-			ASSERT3U(zio->io_priority, !=, ZIO_PRIORITY_REBUILD);
+			ASSERT3U(zio->io_priority, !=,
+			    ZIO_PRIORITY_REBUILD_READ);
+			/*
+			 * The I/O type is not ZIO_TYPE_WRITE here, since we
+			 * just checked this, so this cannot be a rebuild
+			 * write I/O.
+			 */
+			ASSERT3U(zio->io_priority, !=,
+			    ZIO_PRIORITY_REBUILD_WRITE);
 
 			/*
 			 * This isn't a typical situation -- either we got a

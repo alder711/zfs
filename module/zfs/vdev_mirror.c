@@ -693,10 +693,16 @@ vdev_mirror_io_start(zio_t *zio)
 		 * is limited by the slowest child.  This is an issue for
 		 * faster replacement devices such as distributed spares.
 		 */
-		if ((zio->io_priority == ZIO_PRIORITY_REBUILD) &&
+		if ((zio->io_priority == ZIO_PRIORITY_REBUILD_WRITE) &&
 		    (zio->io_flags & ZIO_FLAG_IO_REPAIR) &&
 		    !(zio->io_flags & ZIO_FLAG_SCRUB) &&
 		    mm->mm_rebuilding && !mc->mc_rebuilding) {
+			/*
+			 * Rebuild write I/Os should be created with the flag
+			 * ZIO_FLAG_IO_REPAIR.
+			 */
+			IMPLY(zio->io_flags & ZIO_FLAG_IO_REPAIR,
+			    zio->io_priority == ZIO_PRIORITY_REBUILD_WRITE);
 			continue;
 		}
 
@@ -847,8 +853,9 @@ vdev_mirror_io_done(zio_t *zio)
 			zio_nowait(zio_vdev_child_io(zio, zio->io_bp,
 			    mc->mc_vd, mc->mc_offset,
 			    zio->io_abd, zio->io_size, ZIO_TYPE_WRITE,
-			    zio->io_priority == ZIO_PRIORITY_REBUILD ?
-			    ZIO_PRIORITY_REBUILD : ZIO_PRIORITY_ASYNC_WRITE,
+			    zio->io_priority == ZIO_PRIORITY_REBUILD_WRITE ?
+			    ZIO_PRIORITY_REBUILD_WRITE :
+			    ZIO_PRIORITY_ASYNC_WRITE,
 			    ZIO_FLAG_IO_REPAIR | (unexpected_errors ?
 			    ZIO_FLAG_SELF_HEAL : 0), NULL, NULL));
 		}
