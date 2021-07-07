@@ -4582,7 +4582,8 @@ vdev_stat_update(zio_t *zio, uint64_t psize)
 			 * double counting repaired bytes the virtual dRAID
 			 * spare vdev is excluded from the processed bytes.
 			 */
-			if (zio->io_priority == ZIO_PRIORITY_REBUILD) {
+			if (zio->io_priority == ZIO_PRIORITY_REBUILD_READ ||
+			    zio->io_priority == ZIO_PRIORITY_REBUILD_WRITE) {
 				vdev_t *tvd = vd->vdev_top;
 				vdev_rebuild_t *vr = &tvd->vdev_rebuild_config;
 				vdev_rebuild_phys_t *vrp = &vr->vr_rebuild_phys;
@@ -4627,7 +4628,8 @@ vdev_stat_update(zio_t *zio, uint64_t psize)
 			 *   ZIO_PRIORITY_ASYNC_WRITE,
 			 *   ZIO_PRIORITY_SCRUB,
 			 *   ZIO_PRIORITY_TRIM,
-			 *   ZIO_PRIORITY_REBUILD.
+			 *   ZIO_PRIORITY_REBUILD_READ,
+			 *   ZIO_PRIORIITY_REBUILD_WRITE.
 			 */
 			if (priority == ZIO_PRIORITY_INITIALIZING) {
 				ASSERT3U(type, ==, ZIO_TYPE_WRITE);

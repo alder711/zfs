@@ -304,7 +304,8 @@ vdev_queue_class_min_active(vdev_queue_t *vq, zio_priority_t p)
 		    MIN(vq->vq_nia_credit, zfs_vdev_initializing_min_active));
 	case ZIO_PRIORITY_TRIM:
 		return (zfs_vdev_trim_min_active);
-	case ZIO_PRIORITY_REBUILD:
+	case ZIO_PRIORITY_REBUILD_READ:
+	case ZIO_PRIORITY_REBUILD_WRITE:
 		return (vq->vq_ia_active == 0 ? zfs_vdev_rebuild_min_active :
 		    MIN(vq->vq_nia_credit, zfs_vdev_rebuild_min_active));
 	default:
@@ -394,7 +395,8 @@ vdev_queue_class_max_active(spa_t *spa, vdev_queue_t *vq, zio_priority_t p)
 		return (zfs_vdev_initializing_max_active);
 	case ZIO_PRIORITY_TRIM:
 		return (zfs_vdev_trim_max_active);
-	case ZIO_PRIORITY_REBUILD:
+	case ZIO_PRIORITY_REBUILD_READ:
+	case ZIO_PRIORITY_REBUILD_WRITE:
 		if (vq->vq_ia_active > 0) {
 			return (MIN(vq->vq_nia_credit,
 			    zfs_vdev_rebuild_min_active));
@@ -534,7 +536,8 @@ vdev_queue_is_interactive(zio_priority_t p)
 	case ZIO_PRIORITY_SCRUB:
 	case ZIO_PRIORITY_REMOVAL:
 	case ZIO_PRIORITY_INITIALIZING:
-	case ZIO_PRIORITY_REBUILD:
+	case ZIO_PRIORITY_REBUILD_READ:
+	case ZIO_PRIORITY_REBUILD_WRITE:
 		return (B_FALSE);
 	default:
 		return (B_TRUE);
@@ -887,7 +890,8 @@ vdev_queue_io(zio_t *zio)
 		    zio->io_priority != ZIO_PRIORITY_SCRUB &&
 		    zio->io_priority != ZIO_PRIORITY_REMOVAL &&
 		    zio->io_priority != ZIO_PRIORITY_INITIALIZING &&
-		    zio->io_priority != ZIO_PRIORITY_REBUILD) {
+		    zio->io_priority != ZIO_PRIORITY_REBUILD_READ) {
+			ASSERT(zio->io_priority != ZIO_PRIORITY_REBUILD_WRITE);
 			zio->io_priority = ZIO_PRIORITY_ASYNC_READ;
 		}
 	} else if (zio->io_type == ZIO_TYPE_WRITE) {
@@ -897,7 +901,8 @@ vdev_queue_io(zio_t *zio)
 		    zio->io_priority != ZIO_PRIORITY_ASYNC_WRITE &&
 		    zio->io_priority != ZIO_PRIORITY_REMOVAL &&
 		    zio->io_priority != ZIO_PRIORITY_INITIALIZING &&
-		    zio->io_priority != ZIO_PRIORITY_REBUILD) {
+		    zio->io_priority != ZIO_PRIORITY_REBUILD_WRITE) {
+			ASSERT(zio->io_priority != ZIO_PRIORITY_REBUILD_READ);
 			zio->io_priority = ZIO_PRIORITY_ASYNC_WRITE;
 		}
 	} else {
