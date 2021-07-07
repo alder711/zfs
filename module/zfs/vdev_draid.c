@@ -1846,7 +1846,8 @@ vdev_draid_io_start_read(zio_t *zio, raidz_row_t *rr)
 	vdev_t *vd = zio->io_vd;
 
 	/* Sequential rebuild must do IO at redundancy group boundary. */
-	IMPLY(zio->io_priority == ZIO_PRIORITY_REBUILD, rr->rr_nempty == 0);
+	IMPLY(zio->io_priority == ZIO_PRIORITY_REBUILD_READ,
+	    rr->rr_nempty == 0);
 
 	/*
 	 * Iterate over the columns in reverse order so that we hit the parity
@@ -1905,7 +1906,7 @@ vdev_draid_io_start_read(zio_t *zio, raidz_row_t *rr)
 			 * performing an incorrect repair could result in
 			 * locking in damage and making the data unrecoverable.
 			 */
-			if (zio->io_priority == ZIO_PRIORITY_REBUILD) {
+			if (zio->io_priority == ZIO_PRIORITY_REBUILD_READ) {
 				if (vdev_draid_rebuilding(cvd)) {
 					if (c >= rr->rr_firstdatacol)
 						rr->rr_missingdata++;
