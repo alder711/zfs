@@ -604,7 +604,7 @@ vdev_rebuild_range(vdev_rebuild_t *vr, uint64_t start, uint64_t size)
 
 	zio_nowait(zio_read(spa->spa_txg_zio[txg & TXG_MASK], spa, &blk,
 	    abd_alloc(psize, B_FALSE), psize, vdev_rebuild_cb, vr,
-	    ZIO_PRIORITY_REBUILD, ZIO_FLAG_RAW | ZIO_FLAG_CANFAIL |
+	    ZIO_PRIORITY_REBUILD_READ, ZIO_FLAG_RAW | ZIO_FLAG_CANFAIL |
 	    ZIO_FLAG_RESILVER, NULL));
 
 	return (0);

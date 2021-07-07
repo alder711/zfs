@@ -268,7 +268,9 @@ zio_handle_fault_injection(zio_t *zio, int error)
 	/*
 	 * A rebuild I/O has no checksum to verify.
 	 */
-	if (zio->io_priority == ZIO_PRIORITY_REBUILD && error == ECKSUM)
+	if ((zio->io_priority == ZIO_PRIORITY_REBUILD_READ ||
+	    zio->io_priority == ZIO_PRIORITY_REBUILD_WRITE) &&
+	    error == ECKSUM)
 		return (0);
 
 	rw_enter(&inject_lock, RW_READER);
