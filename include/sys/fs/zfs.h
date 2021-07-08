@@ -714,7 +714,7 @@ typedef struct zpool_load_policy {
 #define	ZPOOL_CONFIG_VDEV_ASYNC_W_ACTIVE_QUEUE	"vdev_async_w_active_queue"
 #define	ZPOOL_CONFIG_VDEV_SCRUB_ACTIVE_QUEUE	"vdev_async_scrub_active_queue"
 #define	ZPOOL_CONFIG_VDEV_TRIM_ACTIVE_QUEUE	"vdev_async_trim_active_queue"
-#define	ZPOOL_CONFIG_VDEV_REBUILD_R_ACTIVE_QUEue "vdev_rebuild_r_active_queue"
+#define	ZPOOL_CONFIG_VDEV_REBUILD_R_ACTIVE_QUEUE "vdev_rebuild_r_active_queue"
 #define	ZPOOL_CONFIG_VDEV_REBUILD_W_ACTIVE_QUEUE "vdev_rebuild_w_active_queue"
 
 /* Queue sizes */
