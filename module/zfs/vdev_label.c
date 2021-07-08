@@ -256,10 +256,10 @@ vdev_config_generate_stats(vdev_t *vd, nvlist_t *nv)
 	fnvlist_add_uint64(nvx, ZPOOL_CONFIG_VDEV_TRIM_ACTIVE_QUEUE,
 	    vsx->vsx_active_queue[ZIO_PRIORITY_TRIM]);
 
-	fnvlist_add_uint64(nvx, ZPOOL_CONFIG_VDEV_REBUILD_ACTIVE_R_QUEUE,
+	fnvlist_add_uint64(nvx, ZPOOL_CONFIG_VDEV_REBUILD_R_ACTIVE_QUEUE,
 	    vsx->vsx_active_queue[ZIO_PRIORITY_REBUILD_READ]);
 
-	fnvlist_add_uint64(nvx, ZPOOL_CONFIG_VDEV_REBUILD_ACTIVE_W_QUEUE,
+	fnvlist_add_uint64(nvx, ZPOOL_CONFIG_VDEV_REBUILD_W_ACTIVE_QUEUE,
 	    vsx->vsx_active_queue[ZIO_PRIORITY_REBUILD_WRITE]);
 
 	/* ZIOs pending */
@@ -281,10 +281,10 @@ vdev_config_generate_stats(vdev_t *vd, nvlist_t *nv)
 	fnvlist_add_uint64(nvx, ZPOOL_CONFIG_VDEV_TRIM_PEND_QUEUE,
 	    vsx->vsx_pend_queue[ZIO_PRIORITY_TRIM]);
 
-	fnvlist_add_uint64(nvx, ZPOOL_CONFIG_VDEV_REBUILD_PEND_R_QUEUE,
+	fnvlist_add_uint64(nvx, ZPOOL_CONFIG_VDEV_REBUILD_R_PEND_QUEUE,
 	    vsx->vsx_pend_queue[ZIO_PRIORITY_REBUILD_READ]);
 
-	fnvlist_add_uint64(nvx, ZPOOL_CONFIG_VDEV_REBUILD_PEND_W_QUEUE,
+	fnvlist_add_uint64(nvx, ZPOOL_CONFIG_VDEV_REBUILD_W_PEND_QUEUE,
 	    vsx->vsx_pend_queue[ZIO_PRIORITY_REBUILD_WRITE]);
 
 	/* Histograms */

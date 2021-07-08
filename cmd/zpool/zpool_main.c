@@ -223,8 +223,8 @@ static const char *vsx_type_to_nvlist[IOS_COUNT][17] = {
 	    ZPOOL_CONFIG_VDEV_ASYNC_W_LAT_HISTO,
 	    ZPOOL_CONFIG_VDEV_SCRUB_LAT_HISTO,
 	    ZPOOL_CONFIG_VDEV_TRIM_LAT_HISTO,
-	    ZPOOL_CONFIG_VDEV_REBUILD_LAT_R_HISTO,
-	    ZPOOL_CONFIG_VDEV_REBUILD_LAT_W_HISTO,
+	    ZPOOL_CONFIG_VDEV_REBUILD_R_LAT_HISTO,
+	    ZPOOL_CONFIG_VDEV_REBUILD_W_LAT_HISTO,
 	    NULL},
 	[IOS_LATENCY] = {
 	    ZPOOL_CONFIG_VDEV_TOT_R_LAT_HISTO,
@@ -232,8 +232,8 @@ static const char *vsx_type_to_nvlist[IOS_COUNT][17] = {
 	    ZPOOL_CONFIG_VDEV_DISK_R_LAT_HISTO,
 	    ZPOOL_CONFIG_VDEV_DISK_W_LAT_HISTO,
 	    ZPOOL_CONFIG_VDEV_TRIM_LAT_HISTO,
-	    ZPOOL_CONFIG_VDEV_REBUILD_LAT_R_HISTO,
-	    ZPOOL_CONFIG_VDEV_REBUILD_LAT_W_HISTO,
+	    ZPOOL_CONFIG_VDEV_REBUILD_R_LAT_HISTO,
+	    ZPOOL_CONFIG_VDEV_REBUILD_W_LAT_HISTO,
 	    NULL},
 	[IOS_QUEUES] = {
 	    ZPOOL_CONFIG_VDEV_SYNC_R_ACTIVE_QUEUE,
@@ -3888,7 +3888,7 @@ typedef struct name_and_columns {
 	unsigned int columns;	/* Center name to this number of columns */
 } name_and_columns_t;
 
-#define	IOSTAT_MAX_LABELS	15	/* Max number of labels on one line */
+#define	IOSTAT_MAX_LABELS	17	/* Max number of labels on one line */
 
 static const name_and_columns_t iostat_top_labels[][IOSTAT_MAX_LABELS] =
 {
@@ -4600,7 +4600,8 @@ print_iostat_latency(iostat_cbdata_t *cb, nvlist_t *oldnv,
 		ZPOOL_CONFIG_VDEV_ASYNC_W_LAT_HISTO,
 		ZPOOL_CONFIG_VDEV_SCRUB_LAT_HISTO,
 		ZPOOL_CONFIG_VDEV_TRIM_LAT_HISTO,
-		ZPOOL_CONFIG_VDEV_REBUILD_LAT_HISTO,
+		ZPOOL_CONFIG_VDEV_REBUILD_R_LAT_HISTO,
+		ZPOOL_CONFIG_VDEV_REBUILD_W_LAT_HISTO,
 	};
 	struct stat_array *nva;
 
