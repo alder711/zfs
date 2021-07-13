@@ -853,7 +853,7 @@ vdev_mirror_io_done(zio_t *zio)
 			zio_nowait(zio_vdev_child_io(zio, zio->io_bp,
 			    mc->mc_vd, mc->mc_offset,
 			    zio->io_abd, zio->io_size, ZIO_TYPE_WRITE,
-			    zio->io_priority == ZIO_PRIORITY_REBUILD_WRITE ?
+			    zio->io_priority == ZIO_PRIORITY_REBUILD_READ ?
 			    ZIO_PRIORITY_REBUILD_WRITE :
 			    ZIO_PRIORITY_ASYNC_WRITE,
 			    ZIO_FLAG_IO_REPAIR | (unexpected_errors ?
