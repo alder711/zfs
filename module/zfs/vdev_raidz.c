@@ -1921,7 +1921,7 @@ vdev_raidz_io_done_verified(zio_t *zio, raidz_row_t *rr)
 			zio_nowait(zio_vdev_child_io(zio, NULL, cvd,
 			    rc->rc_offset, rc->rc_abd, rc->rc_size,
 			    ZIO_TYPE_WRITE,
-			    zio->io_priority == ZIO_PRIORITY_REBUILD_WRITE ?
+			    zio->io_priority == ZIO_PRIORITY_REBUILD_READ ?
 			    ZIO_PRIORITY_REBUILD_WRITE :
 			    ZIO_PRIORITY_ASYNC_WRITE,
 			    ZIO_FLAG_IO_REPAIR | (unexpected_errors ?
