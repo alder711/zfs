@@ -157,8 +157,10 @@ uint32_t zfs_vdev_initializing_min_active = 1;
 uint32_t zfs_vdev_initializing_max_active = 1;
 uint32_t zfs_vdev_trim_min_active = 1;
 uint32_t zfs_vdev_trim_max_active = 2;
-uint32_t zfs_vdev_rebuild_min_active = 1;
-uint32_t zfs_vdev_rebuild_max_active = 3;
+uint32_t zfs_vdev_rebuild_read_min_active = 1;
+uint32_t zfs_vdev_rebuild_write_min_active = 1;
+uint32_t zfs_vdev_rebuild_read_max_active = 3;
+uint32_t zfs_vdev_rebuild_write_max_active = 3;
 
 /*
  * When the pool has less than zfs_vdev_async_write_active_min_dirty_percent
@@ -305,9 +307,11 @@ vdev_queue_class_min_active(vdev_queue_t *vq, zio_priority_t p)
 	case ZIO_PRIORITY_TRIM:
 		return (zfs_vdev_trim_min_active);
 	case ZIO_PRIORITY_REBUILD_READ:
+		return (vq->vq_ia_active == 0 ? zfs_vdev_rebuild_read_min_active :
+		    MIN(vq->vq_nia_credit, zfs_vdev_rebuild_read_min_active));
 	case ZIO_PRIORITY_REBUILD_WRITE:
-		return (vq->vq_ia_active == 0 ? zfs_vdev_rebuild_min_active :
-		    MIN(vq->vq_nia_credit, zfs_vdev_rebuild_min_active));
+		return (vq->vq_ia_active == 0 ? zfs_vdev_rebuild_write_min_active :
+		    MIN(vq->vq_nia_credit, zfs_vdev_rebuild_write_min_active));
 	default:
 		panic("invalid priority %u", p);
 		return (0);
@@ -396,13 +400,19 @@ vdev_queue_class_max_active(spa_t *spa, vdev_queue_t *vq, zio_priority_t p)
 	case ZIO_PRIORITY_TRIM:
 		return (zfs_vdev_trim_max_active);
 	case ZIO_PRIORITY_REBUILD_READ:
+		if (vq->vq_ia_active > 0) {
+			return (MIN(vq->vq_nia_credit,
+			    zfs_vdev_rebuild_read_min_active));
+		} else if (vq->vq_nia_credit < zfs_vdev_nia_delay)
+			return (MAX(1, zfs_vdev_rebuild_read_min_active));
+		return (zfs_vdev_rebuild_read_max_active);
 	case ZIO_PRIORITY_REBUILD_WRITE:
 		if (vq->vq_ia_active > 0) {
 			return (MIN(vq->vq_nia_credit,
-			    zfs_vdev_rebuild_min_active));
+			    zfs_vdev_rebuild_write_min_active));
 		} else if (vq->vq_nia_credit < zfs_vdev_nia_delay)
-			return (MAX(1, zfs_vdev_rebuild_min_active));
-		return (zfs_vdev_rebuild_max_active);
+			return (MAX(1, zfs_vdev_rebuild_write_min_active));
+		return (zfs_vdev_rebuild_write_max_active);
 	default:
 		panic("invalid priority %u", p);
 		return (0);
@@ -1109,11 +1119,17 @@ ZFS_MODULE_PARAM(zfs_vdev, zfs_vdev_, trim_max_active, INT, ZMOD_RW,
 ZFS_MODULE_PARAM(zfs_vdev, zfs_vdev_, trim_min_active, INT, ZMOD_RW,
 	"Min active trim/discard I/Os per vdev");
 
-ZFS_MODULE_PARAM(zfs_vdev, zfs_vdev_, rebuild_max_active, INT, ZMOD_RW,
+ZFS_MODULE_PARAM(zfs_vdev, zfs_vdev_, rebuild_read_max_active, INT, ZMOD_RW,
 	"Max active rebuild I/Os per vdev");
 
-ZFS_MODULE_PARAM(zfs_vdev, zfs_vdev_, rebuild_min_active, INT, ZMOD_RW,
-	"Min active rebuild I/Os per vdev");
+ZFS_MODULE_PARAM(zfs_vdev, zfs_vdev_, rebuild_write_max_active, INT, ZMOD_RW,
+	"Max active rebuild write I/Os per vdev");
+
+ZFS_MODULE_PARAM(zfs_vdev, zfs_vdev_, rebuild_read_min_active, INT, ZMOD_RW,
+	"Min active rebuild read I/Os per vdev");
+
+ZFS_MODULE_PARAM(zfs_vdev, zfs_vdev_, rebuild_write_min_active, INT, ZMOD_RW,
+	"Min active rebuild write I/Os per vdev");
 
 ZFS_MODULE_PARAM(zfs_vdev, zfs_vdev_, nia_credit, INT, ZMOD_RW,
 	"Number of non-interactive I/Os to allow in sequence");
