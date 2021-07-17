@@ -2582,10 +2582,17 @@ vdev_draid_spare_io_start(zio_t *zio)
 			if (cvd == NULL) {
 				zio->io_error = SET_ERROR(ENXIO);
 			} else {
-				zio_nowait(zio_vdev_child_io(zio, NULL, cvd,
+				zio_t *cio = zio_vdev_child_io(zio, NULL, cvd,
 				    offset, zio->io_abd, zio->io_size,
 				    zio->io_type, zio->io_priority, 0,
-				    vdev_draid_spare_child_done, zio));
+				    vdev_draid_spare_child_done, zio);
+				if (zio->io_priority == ZIO_PRIORITY_REBUILD_WRITE) {
+					zfs_dbgmsg("zio: %p, ZIO_PRIORITY_REBUILD_WRITE, "
+							"cio: %p, ZIO_PRIORITY_REBUILD_WRITE",
+							zio, cio);
+				}
+				zio_nowait(cio);
+
 			}
 		}
 		break;

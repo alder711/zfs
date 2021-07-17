@@ -3857,6 +3857,12 @@ zio_vdev_io_start(zio_t *zio)
 	    zio->io_type == ZIO_TYPE_WRITE ||
 	    zio->io_type == ZIO_TYPE_TRIM)) {
 
+               if (zio->io_priority == ZIO_PRIORITY_REBUILD_WRITE) {
+                       zfs_dbgmsg("zio: %p, ZIO_PRIORITY_REBUILD_WRITE "
+		           "pio: %p "
+                           "about to queue IO", zio, zio_unique_parent(zio));
+               }
+
 		if (zio->io_type == ZIO_TYPE_READ && vdev_cache_read(zio))
 			return (zio);
 
@@ -3870,6 +3876,14 @@ zio_vdev_io_start(zio_t *zio)
 		}
 		zio->io_delay = gethrtime();
 	}
+
+       if (zio->io_priority == ZIO_PRIORITY_REBUILD_WRITE &&
+           vd->vdev_ops == &vdev_draid_spare_ops) {
+               zfs_dbgmsg("zio: %p, ZIO_PRIORITY_REBUILD_WRITE, "
+		   "pio: %p "
+                   "vd->vdev_ops == &vdev_draid_spare_ops",
+                   zio, zio_unique_parent(zio));
+       }
 
 	vd->vdev_ops->vdev_op_io_start(zio);
 	return (NULL);
