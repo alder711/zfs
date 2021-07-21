@@ -945,6 +945,17 @@ vdev_queue_io_done(zio_t *zio)
 	vq->vq_io_complete_ts = now;
 	vq->vq_io_delta_ts = zio->io_delta = now - zio->io_timestamp;
 
+	/*
+	 * If this was a rebuild write, it was not put into
+	 * the VDEV queue, so we just return.
+	 */
+	if (zio->io_priority == ZIO_PRIORITY_REBUILD_WRITE) {
+		ASSERT(zio->io_flags & ZIO_FLAG_DONT_QUEUE);
+		ASSERT3U(zio->io_type, ==, ZIO_TYPE_WRITE);
+		zio->io_delta = gethrtime() - zio->io_timestamp;
+		return;
+	}
+
 	mutex_enter(&vq->vq_lock);
 	vdev_queue_pending_remove(vq, zio);
 
