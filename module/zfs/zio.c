@@ -1468,6 +1468,8 @@ zio_vdev_child_io(zio_t *pio, blkptr_t *bp, vdev_t *vd, uint64_t offset,
 		flags &= ~ZIO_FLAG_IO_ALLOCATING;
 	}
 
+	if (pio->io_priority == ZIO_PRIORITY_REBUILD_READ)
+		flags |= ZIO_FLAG_DONT_QUEUE;
 
 	zio = zio_create(pio, pio->io_spa, pio->io_txg, bp, data, size, size,
 	    done, private, type, priority, flags, vd, offset, &pio->io_bookmark,

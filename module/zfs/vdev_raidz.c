@@ -1918,6 +1918,13 @@ vdev_raidz_io_done_verified(zio_t *zio, raidz_row_t *rr)
 				continue;
 			}
 
+                        /*
+                         * If we need to create a cio for ZIO_PRIORITY_REBUILD_WRITE,
+                         * add the flag ZIO_PRIORITY_DONT_QUEUE so that this cio
+                         * bypasses the vdev queues. This is so that this rebuild write
+                         * does not contend with rebuild reads, which already use these
+                         * queues.
+                         */
 			zio_nowait(zio_vdev_child_io(zio, NULL, cvd,
 			    rc->rc_offset, rc->rc_abd, rc->rc_size,
 			    ZIO_TYPE_WRITE,
@@ -1925,7 +1932,9 @@ vdev_raidz_io_done_verified(zio_t *zio, raidz_row_t *rr)
 			    ZIO_PRIORITY_REBUILD_WRITE :
 			    ZIO_PRIORITY_ASYNC_WRITE,
 			    ZIO_FLAG_IO_REPAIR | (unexpected_errors ?
-			    ZIO_FLAG_SELF_HEAL : 0), NULL, NULL));
+			    ZIO_FLAG_SELF_HEAL : 0) | 
+                            (zio->io_priority == ZIO_PRIORITY_REBUILD_READ ? 
+                             ZIO_FLAG_DONT_QUEUE : 0), NULL, NULL));
 		}
 	}
 }
