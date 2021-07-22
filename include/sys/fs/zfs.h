@@ -715,7 +715,6 @@ typedef struct zpool_load_policy {
 #define	ZPOOL_CONFIG_VDEV_SCRUB_ACTIVE_QUEUE	"vdev_async_scrub_active_queue"
 #define	ZPOOL_CONFIG_VDEV_TRIM_ACTIVE_QUEUE	"vdev_async_trim_active_queue"
 #define	ZPOOL_CONFIG_VDEV_REBUILD_R_ACTIVE_QUEUE "vdev_rebuild_r_active_queue"
-#define	ZPOOL_CONFIG_VDEV_REBUILD_W_ACTIVE_QUEUE "vdev_rebuild_w_active_queue"
 
 /* Queue sizes */
 #define	ZPOOL_CONFIG_VDEV_SYNC_R_PEND_QUEUE	"vdev_sync_r_pend_queue"
@@ -725,7 +724,6 @@ typedef struct zpool_load_policy {
 #define	ZPOOL_CONFIG_VDEV_SCRUB_PEND_QUEUE	"vdev_async_scrub_pend_queue"
 #define	ZPOOL_CONFIG_VDEV_TRIM_PEND_QUEUE	"vdev_async_trim_pend_queue"
 #define	ZPOOL_CONFIG_VDEV_REBUILD_R_PEND_QUEUE	"vdev_rebuild_r_pend_queue"
-#define	ZPOOL_CONFIG_VDEV_REBUILD_W_PEND_QUEUE	"vdev_rebuild_w_pend_queue"
 
 /* Latency read/write histogram stats */
 #define	ZPOOL_CONFIG_VDEV_TOT_R_LAT_HISTO	"vdev_tot_r_lat_histo"
