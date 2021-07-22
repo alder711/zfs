@@ -326,10 +326,6 @@ vdev_config_generate_stats(vdev_t *vd, nvlist_t *nv)
 	    vsx->vsx_queue_histo[ZIO_PRIORITY_REBUILD_READ],
 	    ARRAY_SIZE(vsx->vsx_queue_histo[ZIO_PRIORITY_REBUILD_READ]));
 
-	fnvlist_add_uint64_array(nvx, ZPOOL_CONFIG_VDEV_REBUILD_W_LAT_HISTO,
-	    vsx->vsx_queue_histo[ZIO_PRIORITY_REBUILD_WRITE],
-	    ARRAY_SIZE(vsx->vsx_queue_histo[ZIO_PRIORITY_REBUILD_WRITE]));
-
 	/* Request sizes */
 	fnvlist_add_uint64_array(nvx, ZPOOL_CONFIG_VDEV_SYNC_IND_R_HISTO,
 	    vsx->vsx_ind_histo[ZIO_PRIORITY_SYNC_READ],
