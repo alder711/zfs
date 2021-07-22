@@ -737,7 +737,6 @@ typedef struct zpool_load_policy {
 #define	ZPOOL_CONFIG_VDEV_SCRUB_LAT_HISTO	"vdev_scrub_histo"
 #define	ZPOOL_CONFIG_VDEV_TRIM_LAT_HISTO	"vdev_trim_histo"
 #define	ZPOOL_CONFIG_VDEV_REBUILD_R_LAT_HISTO	"vdev_rebuild_r_histo"
-#define	ZPOOL_CONFIG_VDEV_REBUILD_W_LAT_HISTO	"vdev_rebuild_w_histo"
 
 /* Request size histograms */
 #define	ZPOOL_CONFIG_VDEV_SYNC_IND_R_HISTO	"vdev_sync_ind_r_histo"
