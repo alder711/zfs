@@ -729,6 +729,9 @@ vdev_disk_io_start(zio_t *zio)
 	unsigned long trim_flags = 0;
 	int rw, error;
 
+	if (zio->io_priority == ZIO_PRIORITY_REBUILD_WRITE)
+		ASSERT(zio->io_flags & ZIO_FLAG_DONT_QUEUE);
+
 	/*
 	 * If the vdev is closed, it's likely in the REMOVED or FAULTED state.
 	 * Nothing to be done here but return failure.

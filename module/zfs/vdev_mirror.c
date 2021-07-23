@@ -662,7 +662,7 @@ vdev_mirror_io_start(zio_t *zio)
 				    mc->mc_vd, mc->mc_offset,
 				    abd_alloc_sametype(zio->io_abd,
 				    zio->io_size), zio->io_size,
-				    zio->io_type, zio->io_priority, 0,
+				    zio->io_type, zio->io_priority, 0, 
 				    vdev_mirror_scrub_done, mc));
 			}
 			zio_execute(zio);
@@ -693,18 +693,17 @@ vdev_mirror_io_start(zio_t *zio)
 		 * is limited by the slowest child.  This is an issue for
 		 * faster replacement devices such as distributed spares.
 		 */
-		if ((zio->io_priority == ZIO_PRIORITY_REBUILD_WRITE) &&
+		if ((zio->io_priority == ZIO_PRIORITY_REBUILD_READ) &&
 		    (zio->io_flags & ZIO_FLAG_IO_REPAIR) &&
 		    !(zio->io_flags & ZIO_FLAG_SCRUB) &&
 		    mm->mm_rebuilding && !mc->mc_rebuilding) {
-			/*
-			 * Rebuild write I/Os should be created with the flag
-			 * ZIO_FLAG_IO_REPAIR.
-			 */
-			IMPLY(zio->io_flags & ZIO_FLAG_IO_REPAIR,
-			    zio->io_priority == ZIO_PRIORITY_REBUILD_WRITE);
 			continue;
 		}
+
+		IMPLY(zio->io_priority == ZIO_PRIORITY_REBUILD_READ,
+		    zio->io_type == ZIO_TYPE_READ);
+
+		ASSERT(zio->io_priority != ZIO_PRIORITY_REBUILD_WRITE);
 
 		zio_nowait(zio_vdev_child_io(zio, zio->io_bp,
 		    mc->mc_vd, mc->mc_offset, zio->io_abd, zio->io_size,
@@ -857,7 +856,9 @@ vdev_mirror_io_done(zio_t *zio)
 			    ZIO_PRIORITY_REBUILD_WRITE :
 			    ZIO_PRIORITY_ASYNC_WRITE,
 			    ZIO_FLAG_IO_REPAIR | (unexpected_errors ?
-			    ZIO_FLAG_SELF_HEAL : 0), NULL, NULL));
+			    ZIO_FLAG_SELF_HEAL : 0) |
+			    (zio->io_priority == ZIO_PRIORITY_REBUILD_READ ?
+			     ZIO_FLAG_DONT_QUEUE : 0), NULL, NULL));
 		}
 	}
 }

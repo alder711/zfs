@@ -2584,7 +2584,9 @@ vdev_draid_spare_io_start(zio_t *zio)
 			} else {
 				zio_nowait(zio_vdev_child_io(zio, NULL, cvd,
 				    offset, zio->io_abd, zio->io_size,
-				    zio->io_type, zio->io_priority, ZIO_FLAG_DONT_QUEUE,
+				    zio->io_type, zio->io_priority, 
+				    (zio->io_priority == ZIO_PRIORITY_REBUILD_WRITE ?
+				     ZIO_FLAG_DONT_QUEUE : 0),
 				    vdev_draid_spare_child_done, zio));
 			}
 		}

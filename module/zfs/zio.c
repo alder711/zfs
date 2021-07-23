@@ -1468,21 +1468,6 @@ zio_vdev_child_io(zio_t *pio, blkptr_t *bp, vdev_t *vd, uint64_t offset,
 		flags &= ~ZIO_FLAG_IO_ALLOCATING;
 	}
 
-	/*
-	 * If the child zio needs to be a rebuild write, make sure
-	 * that it was also specified that this zio skip the VDEV
-	 * queues.
-	 */
-	if (priority == ZIO_PRIORITY_REBUILD_WRITE)
-		ASSERT(flags & ZIO_FLAG_DONT_QUEUE);
-
-	/*
-	 * If the parent zio is a rebuild write, we need to make sure 
-	 * the child zio is updated with the ZIO_FLAG_DONT_QUEUE flag.
-	 */
-	if (pio->io_priority == ZIO_PRIORITY_REBUILD_WRITE)
-		flags |= ZIO_FLAG_DONT_QUEUE;
-
 	zio = zio_create(pio, pio->io_spa, pio->io_txg, bp, data, size, size,
 	    done, private, type, priority, flags, vd, offset, &pio->io_bookmark,
 	    ZIO_STAGE_VDEV_IO_START >> 1, pipeline);

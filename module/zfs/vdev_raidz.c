@@ -1925,6 +1925,8 @@ vdev_raidz_io_done_verified(zio_t *zio, raidz_row_t *rr)
                          * does not contend with rebuild reads, which already use these
                          * queues.
                          */
+			if (zio->io_priority == ZIO_PRIORITY_REBUILD_READ)
+				ASSERT3P(cvd, !=, NULL);
 			zio_nowait(zio_vdev_child_io(zio, NULL, cvd,
 			    rc->rc_offset, rc->rc_abd, rc->rc_size,
 			    ZIO_TYPE_WRITE,
