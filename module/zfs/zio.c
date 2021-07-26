@@ -1450,6 +1450,13 @@ zio_vdev_child_io(zio_t *pio, blkptr_t *bp, vdev_t *vd, uint64_t offset,
 		flags &= ~ZIO_FLAG_SPECULATIVE;
 
 	/*
+	 * If we've decided to do a rebuild write, the ZIO_FLAG_DONT_QUEUE
+	 * flag must also be explicitly passed in.
+	 */
+	if (priority == ZIO_PRIORITY_REBUILD_WRITE)
+		ASSERT(flags & ZIO_FLAG_DONT_QUEUE);
+
+	/*
 	 * If we're creating a child I/O that is not associated with a
 	 * top-level vdev, then the child zio is not an allocating I/O.
 	 * If this is a retried I/O then we ignore it since we will
