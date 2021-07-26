@@ -693,21 +693,21 @@ vdev_mirror_io_start(zio_t *zio)
 		 * is limited by the slowest child.  This is an issue for
 		 * faster replacement devices such as distributed spares.
 		 */
-		if ((zio->io_priority == ZIO_PRIORITY_REBUILD_READ) &&
+		if ((zio->io_priority == ZIO_PRIORITY_REBUILD_WRITE) &&
 		    (zio->io_flags & ZIO_FLAG_IO_REPAIR) &&
 		    !(zio->io_flags & ZIO_FLAG_SCRUB) &&
 		    mm->mm_rebuilding && !mc->mc_rebuilding) {
 			continue;
 		}
 
-		IMPLY(zio->io_priority == ZIO_PRIORITY_REBUILD_READ,
-		    zio->io_type == ZIO_TYPE_READ);
-
-		ASSERT(zio->io_priority != ZIO_PRIORITY_REBUILD_WRITE);
+		IMPLY(zio->io_priority == ZIO_PRIORITY_REBUILD_WRITE,
+		    zio->io_vd->vdev_ops == &vdev_spare_ops);
 
 		zio_nowait(zio_vdev_child_io(zio, zio->io_bp,
 		    mc->mc_vd, mc->mc_offset, zio->io_abd, zio->io_size,
-		    zio->io_type, zio->io_priority, 0,
+		    zio->io_type, zio->io_priority,
+		    zio->io_priority == ZIO_PRIORITY_REBUILD_WRITE ?
+		    ZIO_FLAG_DONT_QUEUE : 0,
 		    vdev_mirror_child_done, mc));
 	}
 
