@@ -153,8 +153,8 @@ static const char *const zio_taskq_types[ZIO_TASKQ_TYPES] = {
 const zio_taskq_info_t zio_taskqs[ZIO_TYPES][ZIO_TASKQ_TYPES] = {
 	/* ISSUE	ISSUE_HIGH	INTR		INTR_HIGH */
 	{ ZTI_ONE,	ZTI_NULL,	ZTI_ONE,	ZTI_NULL }, /* NULL */
-	{ ZTI_N(8),	ZTI_NULL,	ZTI_SCALE,	ZTI_NULL }, /* READ */
-	{ ZTI_BATCH,	ZTI_N(5),	ZTI_SCALE,	ZTI_N(5) }, /* WRITE */
+	{ ZTI_N(8),	ZTI_NULL,	ZTI_P(12, 8),	ZTI_NULL }, /* READ */
+	{ ZTI_BATCH,	ZTI_N(5),	ZTI_P(12, 8),	ZTI_N(5) }, /* WRITE */
 	{ ZTI_SCALE,	ZTI_NULL,	ZTI_ONE,	ZTI_NULL }, /* FREE */
 	{ ZTI_ONE,	ZTI_NULL,	ZTI_ONE,	ZTI_NULL }, /* CLAIM */
 	{ ZTI_ONE,	ZTI_NULL,	ZTI_ONE,	ZTI_NULL }, /* IOCTL */
@@ -167,12 +167,14 @@ static boolean_t spa_has_active_shared_spare(spa_t *spa);
 static int spa_load_impl(spa_t *spa, spa_import_type_t type, char **ereport);
 static void spa_vdev_resilver_done(spa_t *spa);
 
-uint_t		zio_taskq_batch_pct = 80;	/* 1 thread per cpu in pset */
-uint_t		zio_taskq_batch_tpq;		/* threads per taskq */
-boolean_t	zio_taskq_sysdc = B_TRUE;	/* use SDC scheduling class */
-uint_t		zio_taskq_basedc = 80;		/* base duty cycle */
+uint_t		zio_taskq_batch_pct = 80;	 /* 1 thread per cpu in pset */
+uint_t		zio_taskq_batch_tpq;		 /* threads per taskq */
+uint_t          zio_rw_int_taskq_total_thrs = 0; /* Total threads among r/w int taskqs */
+uint_t          zio_rw_int_taskq_taskqs = 0;     /* Total r/w int taskqs */
+boolean_t	zio_taskq_sysdc = B_TRUE;	 /* use SDC scheduling class */
+uint_t		zio_taskq_basedc = 80;		 /* base duty cycle */
 
-boolean_t	spa_create_process = B_TRUE;	/* no process ==> no sysdc */
+boolean_t	spa_create_process = B_TRUE;	 /* no process ==> no sysdc */
 
 /*
  * Report any spa_load_verify errors found, but do not fail spa_load.
@@ -973,6 +975,19 @@ spa_taskqs_init(spa_t *spa, zio_type_t t, zio_taskq_type_t q)
 	switch (mode) {
 	case ZTI_MODE_FIXED:
 		ASSERT3U(value, >, 0);
+		/*
+		 * If initializing a read/write interrupt taskq,
+		 * use given module parameters if not zero.
+		 */
+		if ((t == ZIO_TYPE_READ || t == ZIO_TYPE_WRITE) && 
+		    q == ZIO_TASKQ_INTERRUPT) {
+			if (zio_rw_int_taskq_total_thrs > 0)
+				count = zio_rw_int_taskq_taskqs;
+			if (zio_rw_int_taskq_taskqs > 0)
+				value = zio_rw_int_taskq_total_thrs / count;
+			zfs_dbgmsg("TASKQs: flags has TASKQ_THREADS_CPU_PCT: %d",
+		 	    flags & TASKQ_THREADS_CPU_PCT);
+		}
 		break;
 
 	case ZTI_MODE_BATCH:
@@ -1034,16 +1049,23 @@ spa_taskqs_init(spa_t *spa, zio_type_t t, zio_taskq_type_t q)
 	tqs->stqs_count = count;
 	tqs->stqs_taskq = kmem_alloc(count * sizeof (taskq_t *), KM_SLEEP);
 
+	if (t == ZIO_TYPE_WRITE && q == ZIO_TASKQ_INTERRUPT)
+		zfs_dbgmsg("TASKQs: count=%d value=%d", count, value);
 	for (uint_t i = 0; i < count; i++) {
 		taskq_t *tq;
 		char name[32];
 
-		if (count > 1)
+		if (count > 1) {
 			(void) snprintf(name, sizeof (name), "%s_%s_%u",
 			    zio_type_name[t], zio_taskq_types[q], i);
-		else
+			if (t == ZIO_TYPE_WRITE && q == ZIO_TASKQ_INTERRUPT)
+				zfs_dbgmsg("TASKQs: name=%s_%s_%u", zio_type_name[t], zio_taskq_types[q], i);
+		} else {
 			(void) snprintf(name, sizeof (name), "%s_%s",
 			    zio_type_name[t], zio_taskq_types[q]);
+			if (t == ZIO_TYPE_WRITE && q == ZIO_TASKQ_INTERRUPT)
+				zfs_dbgmsg("TASKQs: name=%s_%s", zio_type_name[t], zio_taskq_types[q]);
+		}
 
 		if (zio_taskq_sysdc && spa->spa_proc != &p0) {
 			if (batch)
@@ -9928,6 +9950,12 @@ ZFS_MODULE_PARAM(zfs_zio, zio_, taskq_batch_pct, UINT, ZMOD_RD,
 
 ZFS_MODULE_PARAM(zfs_zio, zio_, taskq_batch_tpq, UINT, ZMOD_RD,
 	"Number of threads per IO worker taskqueue");
+
+ZFS_MODULE_PARAM(zfs_zio, zio_, rw_int_taskq_total_thrs, UINT, ZMOD_RW,
+	"Number of total threads among read/write interrupt taskqueues");
+
+ZFS_MODULE_PARAM(zfs_zio, zio_, rw_int_taskq_taskqs, UINT, ZMOD_RW,
+	"Number of read/write interrupt taskqueues ");
 
 ZFS_MODULE_PARAM(zfs, zfs_, max_missing_tvds, ULONG, ZMOD_RW,
 	"Allow importing pool with up to this number of missing top-level "
